@@ -3,142 +3,1545 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FoodFlow — Logistics Simulation</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
+<title>FoodFlow — Live Simulation</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{
-  --g:#00D97E;
-  --bg:#070B0F;
-  --s1:#0E1419;
-  --s2:#141C24;
-  --b:rgba(255,255,255,0.06);
-  --t:#E8F0FE;
-  --m:#6B7A8D;
-  --font:'Manrope',sans-serif;
-  --display:'Syne',sans-serif;
+:root {
+  --g: #00D97E;
+  --g2: #00b368;
+  --glow: rgba(0,217,126,0.15);
+  --orange: #FF6B35;
+  --amber: #FFB800;
+  --red: #FF4757;
+  --blue: #4FACFE;
+  --bg: #070B0F;
+  --s1: #0E1419;
+  --s2: #141C24;
+  --s3: #1A2330;
+  --b: rgba(255,255,255,0.06);
+  --b2: rgba(255,255,255,0.1);
+  --t: #E8F0FE;
+  --m: #6B7A8D;
+  --font: 'Manrope', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --display: 'Syne', sans-serif;
 }
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font);background:var(--bg);color:var(--t);overflow-x:hidden;min-height:100vh;}
 
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:var(--font);background:var(--bg);color:var(--t);min-height:100vh}
+/* Scrollbar */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--s1);}
+::-webkit-scrollbar-thumb{background:var(--g2);border-radius:4px;}
 
-/* NAV */
+/* ── TOP NAV ── */
 #topnav{
-  position:fixed;top:0;left:0;right:0;height:56px;
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  height:56px;
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 24px;background:var(--s1);border-bottom:1px solid var(--b);
-  z-index:1000;
+  padding:0 24px;
+  background:rgba(7,11,15,0.92);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--b);
 }
-.logo{font-family:var(--display);font-weight:800;color:var(--g);cursor:pointer}
-.nav-pills{display:flex;gap:10px}
-.npill{
-  padding:6px 14px;border-radius:6px;border:1px solid var(--b);
-  background:transparent;color:var(--m);cursor:pointer;font-size:0.8rem;
-}
-.npill.on{background:var(--g);color:#000}
+.logo{font-family:var(--display);font-size:1.25rem;font-weight:800;color:var(--g);display:flex;align-items:center;gap:8px;cursor:pointer;}
+.logo-dot{width:7px;height:7px;background:var(--orange);border-radius:50%;animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.4);}}
 
-/* VIEW */
-.view{display:none;padding-top:56px}
-.view.on{display:block}
+.nav-pills{display:flex;gap:2px;background:var(--s1);border:1px solid var(--b);border-radius:10px;padding:3px;}
+.npill{padding:6px 16px;border-radius:7px;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all .2s;color:var(--m);border:none;background:transparent;}
+.npill.on{background:var(--g);color:#000;}
+.npill:hover:not(.on){color:var(--t);}
 
-/* ABOUT */
-#about-view{padding:60px 24px;max-width:900px;margin:auto;text-align:center}
-.about-title{
-  font-family:var(--display);
-  font-size:clamp(2rem,5vw,3.2rem);
-  font-weight:800;margin-bottom:16px;
-}
-.about-sub{
-  color:var(--m);
-  max-width:600px;
-  margin:0 auto 40px auto;
-  line-height:1.6;
-}
-.btn{
-  padding:10px 22px;
-  background:var(--g);
-  color:#000;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  font-weight:600;
-  margin:5px;
-}
+.nav-status{display:flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--m);}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--g);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,217,126,0.4);}70%{box-shadow:0 0 0 8px rgba(0,217,126,0);}}
 
-/* FOOTER */
-.footer{
-  margin-top:80px;
+/* ── VIEWS ── */
+.view{display:none;padding-top:56px;min-height:100vh;}
+.view.on{display:block;}
+
+/* ── SIMULATION VIEW ── */
+#sim-view{display:none;}
+#sim-view.on{display:grid;grid-template-columns:1fr 420px;grid-template-rows:100%;min-height:calc(100vh - 56px);}
+
+/* ── MAP PANEL ── */
+#map-panel{
+  position:relative;
   background:var(--s1);
-  border-top:1px solid var(--b);
-  padding:16px;
-  text-align:center;
-  font-size:0.75rem;
-  color:var(--m);
+  overflow:hidden;
+  border-right:1px solid var(--b);
 }
-.footer strong{color:var(--g)}
+#sim-canvas{display:block;width:100%;height:100%;}
+
+.map-overlay-top{
+  position:absolute;top:16px;left:16px;right:16px;
+  display:flex;align-items:center;justify-content:space-between;
+  pointer-events:none;
+}
+.map-label{
+  background:rgba(7,11,15,0.85);
+  border:1px solid var(--b2);
+  border-radius:10px;
+  padding:8px 14px;
+  font-size:0.78rem;
+  font-weight:600;
+  color:var(--g);
+  display:flex;align-items:center;gap:6px;
+}
+.map-label span{color:var(--m);}
+
+.phase-banner{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:12px 20px;
+  background:linear-gradient(0deg, rgba(7,11,15,0.98) 60%, transparent);
+  display:flex;align-items:center;gap:12px;
+}
+.phase-icon{font-size:1.4rem;}
+.phase-title{font-family:var(--display);font-weight:700;font-size:0.95rem;color:var(--t);}
+.phase-sub{font-size:0.75rem;color:var(--m);}
+
+/* Legend */
+.map-legend{
+  position:absolute;top:16px;right:16px;
+  background:rgba(7,11,15,0.85);border:1px solid var(--b);border-radius:10px;
+  padding:12px;display:flex;flex-direction:column;gap:7px;
+}
+.leg{display:flex;align-items:center;gap:8px;font-size:0.72rem;color:var(--m);}
+.leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* ── SIDE PANEL ── */
+#side-panel{
+  display:flex;flex-direction:column;
+  background:var(--bg);
+  overflow-y:auto;
+  overflow-x:hidden;
+}
+
+/* ── TIMELINE ── */
+#timeline{
+  padding:16px;
+  border-bottom:1px solid var(--b);
+}
+.tl-header{font-family:var(--display);font-weight:700;font-size:0.85rem;margin-bottom:12px;color:var(--m);letter-spacing:1px;text-transform:uppercase;}
+.tl-steps{display:flex;gap:0;position:relative;}
+.tl-steps::before{content:'';position:absolute;top:16px;left:16px;right:16px;height:2px;background:var(--s3);z-index:0;}
+.tl-step{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;z-index:1;}
+.tl-dot{
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.9rem;
+  background:var(--s2);border:2px solid var(--s3);
+  transition:all .4s;
+}
+.tl-dot.done{background:var(--g);border-color:var(--g);box-shadow:0 0 12px rgba(0,217,126,0.5);}
+.tl-dot.active{background:var(--s2);border-color:var(--g);box-shadow:0 0 12px rgba(0,217,126,0.3);animation:tl-pulse 1.5s infinite;}
+@keyframes tl-pulse{0%,100%{box-shadow:0 0 12px rgba(0,217,126,0.3);}50%{box-shadow:0 0 20px rgba(0,217,126,0.6);}}
+.tl-lbl{font-size:0.62rem;color:var(--m);text-align:center;font-weight:600;line-height:1.2;}
+.tl-lbl.done{color:var(--g);}
+.tl-lbl.active{color:var(--t);}
+.tl-connector{position:absolute;top:15px;left:50%;right:-50%;height:2px;background:var(--s3);z-index:-1;transition:background .4s;}
+.tl-connector.done{background:var(--g);}
+
+/* ── DONATION FORM ── */
+#phase-form{padding:16px;}
+.ph-title{font-family:var(--display);font-weight:800;font-size:1.1rem;margin-bottom:4px;}
+.ph-sub{font-size:0.8rem;color:var(--m);margin-bottom:16px;line-height:1.5;}
+.fg{margin-bottom:12px;}
+.fl{display:block;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--m);margin-bottom:5px;}
+.fi,.fs,.fta{
+  width:100%;padding:10px 12px;
+  background:var(--s2);border:1px solid var(--b2);border-radius:8px;
+  color:var(--t);font-family:var(--font);font-size:0.85rem;outline:none;
+  transition:border-color .2s;
+}
+.fi:focus,.fs:focus,.fta:focus{border-color:var(--g);}
+.fs option{background:var(--s2);}
+.fta{resize:none;height:60px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.urgency-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;}
+.u-opt{
+  padding:8px 4px;text-align:center;border-radius:8px;
+  border:1px solid var(--b2);background:var(--s2);
+  color:var(--m);font-size:0.72rem;font-weight:600;cursor:pointer;transition:all .2s;
+}
+.u-opt.sel-u{border-color:var(--red);background:rgba(255,71,87,0.1);color:var(--red);}
+.u-opt.sel-m{border-color:var(--amber);background:rgba(255,184,0,0.1);color:var(--amber);}
+.u-opt.sel-l{border-color:var(--g);background:var(--glow);color:var(--g);}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:11px 24px;border-radius:9px;font-family:var(--font);
+  font-size:0.88rem;font-weight:700;cursor:pointer;border:none;transition:all .2s;
+  width:100%;
+}
+.btn-g{background:var(--g);color:#000;}
+.btn-g:hover{background:var(--g2);transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,217,126,0.3);}
+.btn-outline{background:transparent;color:var(--t);border:1px solid var(--b2);}
+.btn-outline:hover{border-color:var(--g);color:var(--g);}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+
+/* ── SCORING PANEL ── */
+#phase-scoring{padding:16px;display:none;}
+.score-card{
+  background:var(--s2);border:1px solid var(--b);border-radius:12px;padding:16px;margin-bottom:12px;
+}
+.score-title{font-family:var(--display);font-weight:700;font-size:0.88rem;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.score-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.score-label{font-size:0.75rem;color:var(--m);width:100px;flex-shrink:0;}
+.score-bar-bg{flex:1;height:6px;background:var(--s3);border-radius:100px;overflow:hidden;}
+.score-bar-fill{height:100%;border-radius:100px;transition:width 1.2s cubic-bezier(.4,0,.2,1);}
+.score-val{font-size:0.75rem;font-family:var(--mono);color:var(--t);width:32px;text-align:right;}
+
+.urgency-score{
+  text-align:center;padding:20px;
+  background:linear-gradient(135deg,rgba(255,71,87,0.1),rgba(255,71,87,0.05));
+  border:1px solid rgba(255,71,87,0.2);border-radius:12px;margin-bottom:12px;
+}
+.us-num{font-family:var(--display);font-size:2.5rem;font-weight:800;color:var(--red);line-height:1;}
+.us-label{font-size:0.72rem;color:var(--m);margin-top:4px;}
+.us-badge{
+  display:inline-block;margin-top:8px;padding:4px 14px;
+  background:rgba(255,71,87,0.15);border:1px solid rgba(255,71,87,0.3);
+  border-radius:100px;font-size:0.7rem;font-weight:700;color:var(--red);
+}
+
+/* ── MATCHING PANEL ── */
+#phase-matching{padding:16px;display:none;}
+.driver-match{
+  display:flex;align-items:center;gap:12px;
+  padding:14px;background:var(--s2);border:1px solid var(--b);border-radius:12px;
+  margin-bottom:10px;cursor:pointer;transition:all .25s;
+}
+.driver-match:hover{border-color:rgba(0,217,126,0.3);}
+.driver-match.selected{border-color:var(--g);background:linear-gradient(135deg,rgba(0,217,126,0.08),var(--s2));}
+.dm-avatar{
+  width:44px;height:44px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;font-size:1.3rem;
+  background:var(--s3);border:1px solid var(--b2);flex-shrink:0;
+}
+.dm-name{font-weight:700;font-size:0.9rem;}
+.dm-meta{font-size:0.72rem;color:var(--m);margin-top:2px;}
+.dm-badge{
+  margin-left:auto;padding:4px 10px;border-radius:8px;font-size:0.7rem;font-weight:700;
+  background:var(--glow);color:var(--g);border:1px solid rgba(0,217,126,0.2);white-space:nowrap;
+}
+.dm-badge.best{background:rgba(0,217,126,0.2);box-shadow:0 0 8px rgba(0,217,126,0.2);}
+
+/* ── DELIVERY TRACKING ── */
+#phase-delivery{padding:16px;display:none;}
+.delivery-status{
+  background:var(--s2);border:1px solid var(--b);border-radius:12px;padding:16px;margin-bottom:12px;
+}
+.ds-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.ds-title{font-family:var(--display);font-weight:700;font-size:0.88rem;}
+.ds-eta{font-size:0.78rem;color:var(--g);font-weight:600;}
+
+.delivery-steps{display:flex;flex-direction:column;gap:0;}
+.del-step{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--b);}
+.del-step:last-child{border-bottom:none;}
+.del-icon{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:0.7rem;
+  border:2px solid var(--s3);background:var(--s3);flex-shrink:0;margin-top:2px;transition:all .4s;
+}
+.del-icon.done{background:var(--g);border-color:var(--g);color:#000;}
+.del-icon.active{border-color:var(--g);background:rgba(0,217,126,0.1);animation:del-pulse 1s infinite;}
+@keyframes del-pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,217,126,0.3);}50%{box-shadow:0 0 0 5px rgba(0,217,126,0);}}
+.del-text{flex:1;}
+.del-title{font-size:0.83rem;font-weight:600;}
+.del-time{font-size:0.7rem;color:var(--m);font-family:var(--mono);}
+
+/* Progress bar */
+.route-progress{height:4px;background:var(--s3);border-radius:100px;overflow:hidden;margin-bottom:12px;}
+.route-fill{height:100%;background:linear-gradient(90deg,var(--g),var(--amber));border-radius:100px;transition:width 0.5s ease;}
+
+/* driver card during delivery */
+.active-driver-card{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;background:linear-gradient(135deg,rgba(0,217,126,0.08),var(--s2));
+  border:1px solid rgba(0,217,126,0.2);border-radius:10px;margin-bottom:12px;
+}
+.adc-avatar{width:36px;height:36px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.adc-name{font-weight:600;font-size:0.85rem;}
+.adc-meta{font-size:0.7rem;color:var(--m);}
+.adc-pts{margin-left:auto;font-family:var(--display);font-weight:800;color:var(--amber);font-size:0.9rem;}
+
+/* ── IMPACT PANEL ── */
+#phase-impact{padding:16px;display:none;}
+.impact-hero-card{
+  background:linear-gradient(135deg,rgba(0,217,126,0.12),rgba(0,217,126,0.04));
+  border:1px solid rgba(0,217,126,0.25);border-radius:16px;
+  padding:24px;text-align:center;margin-bottom:12px;
+}
+.ih-num{font-family:var(--display);font-size:3rem;font-weight:800;color:var(--g);line-height:1;}
+.ih-label{font-size:0.78rem;color:var(--m);margin-top:4px;}
+.impact-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
+.impact-mini{background:var(--s2);border:1px solid var(--b);border-radius:10px;padding:12px;text-align:center;}
+.im-num{font-family:var(--display);font-weight:800;font-size:1.2rem;color:var(--t);}
+.im-lbl{font-size:0.65rem;color:var(--m);margin-top:2px;}
+
+/* Certificate */
+.certificate{
+  background:var(--s2);border:1px solid rgba(0,217,126,0.2);border-radius:12px;padding:16px;margin-bottom:12px;
+}
+.cert-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.cert-badge{font-size:1.4rem;}
+.cert-title{font-family:var(--display);font-weight:700;font-size:0.88rem;}
+.cert-donor{font-size:0.78rem;color:var(--g);font-weight:600;margin-bottom:4px;}
+.cert-text{font-size:0.75rem;color:var(--m);line-height:1.6;}
+
+/* Story post */
+.story-post{background:var(--s2);border:1px solid var(--b);border-radius:12px;overflow:hidden;margin-bottom:12px;}
+.sp-img{height:120px;background:linear-gradient(135deg,#0a2015,#082910);display:flex;align-items:center;justify-content:center;font-size:3rem;}
+.sp-body{padding:12px;}
+.sp-ngo{font-size:0.65rem;color:var(--g);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.sp-text{font-size:0.8rem;line-height:1.5;}
+.sp-meta{font-size:0.7rem;color:var(--m);margin-top:8px;display:flex;gap:12px;}
+
+/* ── GLOBAL DASHBOARD VIEW ── */
+#dash-view{padding:20px 24px;}
+.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.kpi{background:var(--s1);border:1px solid var(--b);border-radius:12px;padding:16px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;bottom:-10px;right:-10px;width:50px;height:50px;border-radius:50%;opacity:0.08;}
+.kpi.g::before{background:var(--g);}
+.kpi.o::before{background:var(--orange);}
+.kpi.a::before{background:var(--amber);}
+.kpi.b::before{background:var(--blue);}
+.kpi-l{font-size:0.7rem;color:var(--m);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:6px;}
+.kpi-v{font-family:var(--display);font-size:1.8rem;font-weight:800;}
+.kpi.g .kpi-v{color:var(--g);}
+.kpi.o .kpi-v{color:var(--orange);}
+.kpi.a .kpi-v{color:var(--amber);}
+.kpi.b .kpi-v{color:var(--blue);}
+.kpi-t{font-size:0.7rem;color:var(--m);margin-top:4px;}
+
+.dash-mid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.card{background:var(--s1);border:1px solid var(--b);border-radius:12px;padding:16px;}
+.card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.card-t{font-family:var(--display);font-weight:700;font-size:0.88rem;}
+.pill{padding:3px 10px;border-radius:100px;font-size:0.65rem;font-weight:700;}
+.pill-g{background:var(--glow);color:var(--g);border:1px solid rgba(0,217,126,0.2);}
+.pill-o{background:rgba(255,107,53,0.12);color:var(--orange);border:1px solid rgba(255,107,53,0.2);}
+
+/* Donation feed */
+.feed-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--b);animation:fi-in .3s ease;}
+@keyframes fi-in{from{opacity:0;transform:translateX(-8px);}to{opacity:1;transform:translateX(0);}}
+.feed-item:last-child{border-bottom:none;}
+.fi-ico{width:32px;height:32px;border-radius:8px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.fi-name{font-size:0.82rem;font-weight:600;}
+.fi-detail{font-size:0.7rem;color:var(--m);}
+.fi-badge{padding:2px 8px;border-radius:100px;font-size:0.62rem;font-weight:700;white-space:nowrap;}
+.fi-u{background:rgba(255,71,87,0.12);color:var(--red);border:1px solid rgba(255,71,87,0.2);}
+.fi-m{background:rgba(255,184,0,0.12);color:var(--amber);border:1px solid rgba(255,184,0,0.2);}
+.fi-l{background:var(--glow);color:var(--g);border:1px solid rgba(0,217,126,0.2);}
+
+/* Map canvas for dash */
+.mini-map{height:200px;background:var(--s2);border-radius:10px;overflow:hidden;position:relative;}
+.mini-map canvas{width:100%;height:100%;}
+
+/* Leaderboard */
+.lb-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--b);}
+.lb-item:last-child{border-bottom:none;}
+.lb-rank{font-family:var(--display);font-weight:800;font-size:1rem;width:20px;color:var(--m);}
+.lb-rank.r1{color:#FFD700;}
+.lb-rank.r2{color:#C0C0C0;}
+.lb-rank.r3{color:#CD7F32;}
+.lb-name{font-size:0.82rem;font-weight:600;flex:1;}
+.lb-val{font-family:var(--display);font-weight:700;color:var(--g);font-size:0.88rem;}
+
+/* Bar chart */
+.bars{display:flex;align-items:flex-end;gap:6px;height:100px;padding:0 4px;}
+.bar-col{display:flex;flex-direction:column;align-items:center;flex:1;gap:4px;}
+.bar{width:100%;border-radius:4px 4px 0 0;transition:height 0.8s ease;}
+.bar-lbl{font-size:0.58rem;color:var(--m);}
+
+/* ── ABOUT VIEW ── */
+#about-view{padding:40px 24px;max-width:900px;margin:0 auto;}
+.about-hero{text-align:center;padding:48px 24px;margin-bottom:40px;}
+.about-title{font-family:var(--display);font-size:clamp(2rem,5vw,4rem);font-weight:800;letter-spacing:-2px;line-height:1.05;margin-bottom:16px;}
+.about-sub{font-size:1rem;color:var(--m);max-width:520px;margin:0 auto;line-height:1.7;}
+.about-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:32px;}
+.about-card{background:var(--s1);border:1px solid var(--b);border-radius:14px;padding:20px;}
+.about-icon{font-size:1.8rem;margin-bottom:10px;}
+.about-ct{font-family:var(--display);font-weight:700;font-size:0.92rem;margin-bottom:6px;}
+.about-cd{font-size:0.8rem;color:var(--m);line-height:1.6;}
+
+/* ── TOAST ── */
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.toast{
+  background:var(--s2);border:1px solid var(--b2);border-left:3px solid var(--g);
+  border-radius:10px;padding:10px 14px;font-size:0.8rem;
+  animation:toast-in .3s ease;box-shadow:0 8px 28px rgba(0,0,0,0.5);
+  pointer-events:all;max-width:280px;
+}
+.toast.warn{border-left-color:var(--orange);}
+@keyframes toast-in{from{opacity:0;transform:translateX(16px);}to{opacity:1;transform:translateX(0);}}
+
+/* ── UTILITY ── */
+.hidden{display:none!important;}
+.row{display:flex;gap:8px;}
+.mt8{margin-top:8px;}
+.mt12{margin-top:12px;}
+
+.divider{height:1px;background:var(--b);margin:12px 0;}
+
+.log-box{
+  background:var(--s2);border:1px solid var(--b);border-radius:10px;
+  padding:10px 12px;font-family:var(--mono);font-size:0.7rem;
+  color:var(--m);max-height:100px;overflow-y:auto;margin-bottom:10px;
+}
+.log-line{line-height:1.8;}
+.log-line .t{color:var(--g);}
+.log-line .w{color:var(--amber);}
+.log-line .e{color:var(--red);}
+
+/* Responsive */
+@media(max-width:768px){
+  #sim-view.on{grid-template-columns:1fr;grid-template-rows:40vh auto;}
+  #map-panel{height:40vh;}
+  .dash-grid{grid-template-columns:1fr 1fr;}
+  .about-grid{grid-template-columns:1fr;}
+}
 </style>
 </head>
-
 <body>
 
+<!-- ── NAV ── -->
 <div id="topnav">
-  <div class="logo" onclick="nav('about')">FoodFlow</div>
+  <div class="logo" onclick="nav('about')"><span class="logo-dot"></span>FoodFlow</div>
   <div class="nav-pills">
     <button class="npill on" id="np-about" onclick="nav('about')">About</button>
-    <button class="npill" id="np-sim" onclick="nav('sim')">Simulation</button>
+    <button class="npill" id="np-sim" onclick="nav('sim')">🎮 Live Simulation</button>
     <button class="npill" id="np-dash" onclick="nav('dash')">Dashboard</button>
   </div>
+  <div class="nav-status"><div class="status-dot"></div>Network Live</div>
 </div>
 
-<!-- ABOUT -->
+<!-- ══════════════════════════════
+     ABOUT VIEW
+══════════════════════════════ -->
 <div id="about-view" class="view on">
-  <div class="about-title">
-    Surplus Food Logistics Simulation
+  <div class="about-hero">
+    <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 14px;background:var(--glow);border:1px solid rgba(0,217,126,0.25);border-radius:100px;font-size:0.75rem;font-weight:700;color:var(--g);margin-bottom:20px;">
+      🏆 Hackathon 2025 · Smart Logistics for Good
+    </div>
+    <div class="about-title">Rescue Food.<br><span style="color:var(--g)">Feed Communities.</span><br>Powered by AI.</div>
+    <p class="about-sub">Smart logistics to rescue surplus food and feed communities using idle delivery capacity.</p>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:28px;flex-wrap:wrap;">
+      <button class="btn btn-g" style="width:auto;padding:12px 28px;" onclick="nav('sim')">🎮 Run Live Simulation</button>
+      <button class="btn btn-outline" style="width:auto;padding:12px 28px;" onclick="nav('dash')">📊 View Dashboard</button>
+    </div>
   </div>
 
-  <div class="about-sub">
-    This interface demonstrates a simulated logistics workflow for surplus food redistribution.
-    It visualizes donation posting, priority scoring, driver assignment, delivery tracking,
-    and impact estimation within a controlled demo environment.
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:32px;">
+    <div style="text-align:center;padding:24px;background:var(--s1);border:1px solid var(--b);border-radius:14px;">
+      <div style="font-family:var(--display);font-size:2.5rem;font-weight:800;color:var(--orange);">40%</div>
+      <div style="font-size:0.8rem;color:var(--m);margin-top:4px;">of food produced globally is wasted</div>
+    </div>
+    <div style="text-align:center;padding:24px;background:var(--s1);border:1px solid var(--b);border-radius:14px;">
+      <div style="font-family:var(--display);font-size:2.5rem;font-weight:800;color:var(--red);">820M</div>
+      <div style="font-size:0.8rem;color:var(--m);margin-top:4px;">people face food insecurity worldwide</div>
+    </div>
+    <div style="text-align:center;padding:24px;background:var(--s1);border:1px solid rgba(0,217,126,0.2);border-radius:14px;background:linear-gradient(135deg,rgba(0,217,126,0.08),var(--s1));">
+      <div style="font-family:var(--display);font-size:2.5rem;font-weight:800;color:var(--g);">0→∞</div>
+      <div style="font-size:0.8rem;color:var(--m);margin-top:4px;">idle delivery capacity currently used for rescue</div>
+    </div>
   </div>
 
-  <button class="btn" onclick="nav('sim')">Run Simulation</button>
-  <button class="btn" onclick="nav('dash')">View Dashboard</button>
+  <div class="about-grid">
+    <div class="about-card">
+      <div class="about-icon">🛣️</div>
+      <div class="about-ct">Idle Delivery Utilization</div>
+      <div class="about-cd">Food "piggybacks" on existing delivery routes — return trips, off-peak runs, nearby drivers. Zero extra vehicles needed.</div>
+    </div>
+    <div class="about-card">
+      <div class="about-icon">🧠</div>
+      <div class="about-ct">AI Urgency Engine</div>
+      <div class="about-cd">Scores every pickup by shelf life, distance, NGO demand, and time window. Most urgent food always gets rescued first.</div>
+    </div>
+    <div class="about-card">
+      <div class="about-icon">📊</div>
+      <div class="about-ct">Impact Transparency</div>
+      <div class="about-cd">Every kg donated converts to meals served, CO₂ reduced, families fed. Donors see verified, real-time proof of impact.</div>
+    </div>
+    <div class="about-card">
+      <div class="about-icon">🎁</div>
+      <div class="about-ct">Driver Rewards</div>
+      <div class="about-cd">Delivery partners earn points per rescue trip, redeemable for gifts or cash. Gamification that actually scales volunteer logistics.</div>
+    </div>
+    <div class="about-card">
+      <div class="about-icon">💰</div>
+      <div class="about-ct">Micro-Donations</div>
+      <div class="about-cd">Anyone can donate ₹5–₹50 backed by real stories and NGO contacts. Social proof that money creates actual community change.</div>
+    </div>
+    <div class="about-card">
+      <div class="about-icon">🤝</div>
+      <div class="about-ct">NGO Hub</div>
+      <div class="about-cd">Pre-verified NGO network with demand forecasting. Food arrives when and where communities need it most — not just when convenient.</div>
+    </div>
+  </div>
+
 </div>
 
-<!-- SIMULATION PLACEHOLDER -->
-<div id="sim-view" class="view" style="padding:80px;text-align:center">
-  <h2>Live Simulation Module</h2>
-  <p style="color:var(--m);margin-top:10px">
-    Full interactive simulation retained from original version.
-  </p>
+<!-- ══════════════════════════════
+     SIMULATION VIEW
+══════════════════════════════ -->
+<div id="sim-view" class="view">
+  <!-- Left: Map -->
+  <div id="map-panel">
+    <canvas id="sim-canvas"></canvas>
+    <div class="map-overlay-top">
+      <div class="map-label">🗺️ FoodFlow <span>City Grid · Live Simulation</span></div>
+    </div>
+    <div class="map-legend">
+      <div class="leg"><div class="leg-dot" style="background:var(--orange)"></div>Donor</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--amber)"></div>Driver</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--g)"></div>NGO</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--blue)"></div>Food in transit</div>
+    </div>
+    <div class="phase-banner" id="phase-banner">
+      <div class="phase-icon" id="pbicon">🏁</div>
+      <div>
+        <div class="phase-title" id="pbtitle">Ready to Simulate</div>
+        <div class="phase-sub" id="pbsub">Post a food donation to begin the rescue chain</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Side Panel -->
+  <div id="side-panel">
+    <!-- Timeline -->
+    <div id="timeline">
+      <div class="tl-header">Rescue Pipeline</div>
+      <div class="tl-steps">
+        <div class="tl-step">
+          <div class="tl-dot active" id="tl0">🍽️</div>
+          <div class="tl-dot tl-connector" id="tc0"></div>
+          <div class="tl-lbl active" id="tll0">Donor<br>Posts</div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-dot" id="tl1">🧠</div>
+          <div class="tl-dot tl-connector" id="tc1"></div>
+          <div class="tl-lbl" id="tll1">AI<br>Scores</div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-dot" id="tl2">🚴</div>
+          <div class="tl-dot tl-connector" id="tc2"></div>
+          <div class="tl-lbl" id="tll2">Driver<br>Matched</div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-dot" id="tl3">📦</div>
+          <div class="tl-dot tl-connector" id="tc3"></div>
+          <div class="tl-lbl" id="tll3">In<br>Transit</div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-dot" id="tl4">✅</div>
+          <div class="tl-lbl" id="tll4">Delivered<br>&amp; Impact</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 0: Donor Form -->
+    <div id="phase-form">
+      <div class="ph-title">Post Surplus Food</div>
+      <div class="ph-sub">Register surplus food — our AI handles the rest.</div>
+
+      <div class="fg">
+        <label class="fl">Business Name</label>
+        <input class="fi" id="f-biz" placeholder="e.g. Hotel Spice Garden" value="Hotel Spice Garden">
+      </div>
+      <div class="row2">
+        <div class="fg">
+          <label class="fl">Food Type</label>
+          <select class="fs" id="f-type">
+            <option value="Biryani">🍛 Biryani</option>
+            <option value="Bread">🍞 Bread & Bakery</option>
+            <option value="Sabzi">🥘 Curry/Sabzi</option>
+            <option value="Rice-Dal">🍚 Rice & Dal</option>
+            <option value="Salads">🥗 Salads</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Quantity (kg)</label>
+          <input class="fi" id="f-qty" type="number" value="18" min="1" max="200">
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Urgency / Time Until Expiry</label>
+        <div class="urgency-row">
+          <div class="u-opt sel-u" id="uo-u" onclick="setUrgency('urgent')">🔴 Urgent<br><small>&lt;2 hrs</small></div>
+          <div class="u-opt" id="uo-m" onclick="setUrgency('moderate')">🟡 Moderate<br><small>2–6 hrs</small></div>
+          <div class="u-opt" id="uo-l" onclick="setUrgency('low')">🟢 Stable<br><small>&gt;6 hrs</small></div>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Pickup Location</label>
+        <input class="fi" id="f-loc" placeholder="Address" value="MG Road, Camp, Pune">
+      </div>
+
+      <button class="btn btn-g" onclick="startSim()">🚀 Submit Donation — Start Rescue Chain</button>
+    </div>
+
+    <!-- PHASE 1: AI Scoring -->
+    <div id="phase-scoring">
+      <div class="ph-title">🧠 AI Urgency Engine</div>
+      <div class="ph-sub">Scoring donation across 4 parameters...</div>
+
+      <div class="log-box" id="score-log"></div>
+
+      <div class="score-card">
+        <div class="score-title">⚡ Urgency Score Breakdown</div>
+        <div class="score-row">
+          <div class="score-label">Shelf Life</div>
+          <div class="score-bar-bg"><div class="score-bar-fill" id="sb-shelf" style="width:0%;background:var(--red)"></div></div>
+          <div class="score-val" id="sv-shelf">—</div>
+        </div>
+        <div class="score-row">
+          <div class="score-label">Distance to NGO</div>
+          <div class="score-bar-bg"><div class="score-bar-fill" id="sb-dist" style="width:0%;background:var(--amber)"></div></div>
+          <div class="score-val" id="sv-dist">—</div>
+        </div>
+        <div class="score-row">
+          <div class="score-label">NGO Demand</div>
+          <div class="score-bar-bg"><div class="score-bar-fill" id="sb-demand" style="width:0%;background:var(--g)"></div></div>
+          <div class="score-val" id="sv-demand">—</div>
+        </div>
+        <div class="score-row">
+          <div class="score-label">Food Quantity</div>
+          <div class="score-bar-bg"><div class="score-bar-fill" id="sb-qty" style="width:0%;background:var(--blue)"></div></div>
+          <div class="score-val" id="sv-qty">—</div>
+        </div>
+      </div>
+
+      <div class="urgency-score">
+        <div class="us-num" id="final-score">—</div>
+        <div class="us-label">Final Priority Score (out of 100)</div>
+        <div class="us-badge" id="score-badge">Calculating...</div>
+      </div>
+
+      <div id="scoring-next" class="hidden">
+        <button class="btn btn-g" onclick="goPhase('matching')">✅ Score Computed — Find Driver →</button>
+      </div>
+    </div>
+
+    <!-- PHASE 2: Driver Matching -->
+    <div id="phase-matching">
+      <div class="ph-title">🚴 Driver Matching Engine</div>
+      <div class="ph-sub">Finding drivers near <strong style="color:var(--g)" id="match-loc">pickup</strong> with optimal routes...</div>
+
+      <div class="log-box" id="match-log"></div>
+
+      <div id="drivers-list-match"></div>
+
+      <div id="matching-next" class="hidden">
+        <div style="padding:10px;background:var(--glow);border:1px solid rgba(0,217,126,0.2);border-radius:8px;font-size:0.75rem;color:var(--g);margin-bottom:10px;">
+          ✅ <strong id="matched-driver-name">Driver</strong> accepted the task! ETA to pickup: <strong id="eta-pickup">—</strong>
+        </div>
+        <button class="btn btn-g" onclick="goPhase('delivery')">▶ Start Live Delivery Tracking →</button>
+      </div>
+    </div>
+
+    <!-- PHASE 3: Delivery Tracking -->
+    <div id="phase-delivery">
+      <div class="ph-title">📦 Live Delivery Tracking</div>
+      <div class="ph-sub">Tracking your food rescue in real-time...</div>
+
+      <div class="active-driver-card">
+        <div class="adc-avatar">🚴</div>
+        <div>
+          <div class="adc-name" id="del-driver-name">Driver</div>
+          <div class="adc-meta" id="del-driver-meta">En route to pickup</div>
+        </div>
+        <div class="adc-pts" id="del-pts">+0 pts</div>
+      </div>
+
+      <div class="route-progress"><div class="route-fill" id="del-progress" style="width:0%"></div></div>
+
+      <div class="delivery-status">
+        <div class="ds-header">
+          <div class="ds-title">Rescue Steps</div>
+          <div class="ds-eta" id="del-eta">ETA: Calculating...</div>
+        </div>
+        <div class="delivery-steps" id="del-steps"></div>
+      </div>
+    </div>
+
+    <!-- PHASE 4: Impact -->
+    <div id="phase-impact">
+      <div class="ph-title">🎉 Rescue Complete!</div>
+      <div class="ph-sub">Your surplus food has been successfully rescued. Here's the verified impact:</div>
+
+      <div class="impact-hero-card">
+        <div class="ih-num" id="imp-meals">0</div>
+        <div class="ih-label">meals served to the community</div>
+      </div>
+
+      <div class="impact-row">
+        <div class="impact-mini">
+          <div class="im-num" id="imp-kg">0 kg</div>
+          <div class="im-lbl">food rescued</div>
+        </div>
+        <div class="impact-mini">
+          <div class="im-num" id="imp-co2">0 kg</div>
+          <div class="im-lbl">CO₂ saved</div>
+        </div>
+        <div class="impact-mini">
+          <div class="im-num" id="imp-pts">0</div>
+          <div class="im-lbl">driver points</div>
+        </div>
+      </div>
+
+      <div class="certificate">
+        <div class="cert-header"><div class="cert-badge">🏅</div><div class="cert-title">Impact Certificate</div></div>
+        <div class="cert-donor" id="cert-donor">Donor</div>
+        <div class="cert-text" id="cert-text">Your donation was verified and delivered by FoodFlow.</div>
+      </div>
+
+      <div class="story-post">
+        <div class="sp-img" id="sp-emoji">🍛</div>
+        <div class="sp-body">
+          <div class="sp-ngo" id="sp-ngo">NGO</div>
+          <div class="sp-text" id="sp-text">Community update...</div>
+          <div class="sp-meta"><span id="sp-time">Just now</span><span id="sp-meals">0 meals</span></div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <button class="btn btn-g" onclick="resetSim()">🔄 Simulate Another Rescue</button>
+      <button class="btn btn-outline mt8" onclick="nav('dash')">📊 View Full Dashboard</button>
+    </div>
+
+  </div>
 </div>
 
-<!-- DASHBOARD PLACEHOLDER -->
-<div id="dash-view" class="view" style="padding:80px;text-align:center">
-  <h2>Impact Dashboard</h2>
-  <p style="color:var(--m);margin-top:10px">
-    Aggregated metrics and feed visualization retained from original version.
-  </p>
+<!-- ══════════════════════════════
+     DASHBOARD VIEW
+══════════════════════════════ -->
+<div id="dash-view" class="view">
+  <div class="dash-grid">
+    <div class="kpi g"><div class="kpi-l">Meals Rescued Today</div><div class="kpi-v" id="d-meals">847</div><div class="kpi-t">↑ 23% vs yesterday</div></div>
+    <div class="kpi o"><div class="kpi-l">Active Pickups</div><div class="kpi-v" id="d-pickups">3</div><div class="kpi-t">2 urgent · 1 moderate</div></div>
+    <div class="kpi a"><div class="kpi-l">Food Saved (kg)</div><div class="kpi-v" id="d-food">423</div><div class="kpi-t">↑ 18% this week</div></div>
+    <div class="kpi b"><div class="kpi-l">CO₂ Prevented (kg)</div><div class="kpi-v" id="d-co2">169</div><div class="kpi-t">≈ 3 cars off road today</div></div>
+  </div>
+
+  <div class="dash-mid">
+    <div class="card">
+      <div class="card-h"><div class="card-t">Live Donation Feed</div><div class="pill pill-g">Updating</div></div>
+      <div id="dash-feed"></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-t">Meals Rescued (7 days)</div></div>
+      <div class="bars" id="dash-bars"></div>
+    </div>
+  </div>
+
+  <div class="dash-mid">
+    <div class="card">
+      <div class="card-h"><div class="card-t">Route Map</div><div class="pill pill-o" id="route-count">3 routes</div></div>
+      <div class="mini-map"><canvas id="dash-canvas"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-t">Top Donors</div></div>
+      <div id="dash-lb"></div>
+    </div>
+  </div>
 </div>
 
-<div class="footer">
-  <strong>Disclaimer:</strong> This interface is built purely for simulation and demonstration purposes.
-  It does not fully represent or replicate real-world logistics execution,
-  backend infrastructure, or live production systems.
-</div>
+<!-- Footer -->
+<footer style="background:var(--s1);border-top:1px solid var(--b);text-align:center;padding:16px 24px;font-size:0.9rem;color:var(--m);margin-top:40px;">
+  <strong>Note:</strong> This is a simulation for demonstration purposes only and does not fully represent the actual project execution.
+</footer>
+
+<div class="toast-wrap" id="toasts"></div>
 
 <script>
-function nav(id){
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
-  document.querySelectorAll('.npill').forEach(p=>p.classList.remove('on'));
+// ═══════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════
+const S = {
+  phase: -1,
+  urgency: 'urgent',
+  donor: null,
+  selectedDriver: null,
+  ngo: null,
+  qty: 18,
+  meals: 0,
+  // Global impact counters
+  totalMeals: 847,
+  totalFood: 423,
+  totalCO2: 169,
+  activePickups: 3,
+  simRunning: false
+};
+
+// ═══════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════
+function nav(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
+  document.querySelectorAll('.npill').forEach(p => p.classList.remove('on'));
   document.getElementById(id+'-view').classList.add('on');
   document.getElementById('np-'+id).classList.add('on');
+  if(id==='dash') initDash();
+  if(id==='sim') { initCanvas(); }
 }
 
-window.addEventListener('load',()=>{
+// ═══════════════════════════════════════
+//  URGENCY SELECTOR
+// ═══════════════════════════════════════
+function setUrgency(u) {
+  S.urgency = u;
+  document.getElementById('uo-u').className = 'u-opt' + (u==='urgent'?' sel-u':'');
+  document.getElementById('uo-m').className = 'u-opt' + (u==='moderate'?' sel-m':'');
+  document.getElementById('uo-l').className = 'u-opt' + (u==='low'?' sel-l':'');
+}
+
+// ═══════════════════════════════════════
+//  CANVAS MAP
+// ═══════════════════════════════════════
+let canvas, ctx, mapW, mapH;
+let animFrame;
+
+// Map entities
+const DONORS = [
+  {id:'D1', name:'Hotel Spice Garden', x:0.2, y:0.35, emoji:'🍛'},
+  {id:'D2', name:'Sunrise Bakery', x:0.65, y:0.2, emoji:'🍞'},
+  {id:'D3', name:'Café Metro', x:0.8, y:0.65, emoji:'☕'},
+];
+const DRIVERS_MAP = [
+  {id:'R1', name:'Rahul K.', x:0.35, y:0.55, emoji:'🛵', color:'#FFB800'},
+  {id:'R2', name:'Priya P.', x:0.5, y:0.28, emoji:'🚲', color:'#FFB800'},
+  {id:'R3', name:'Amit S.', x:0.72, y:0.45, emoji:'🏍️', color:'#FFB800'},
+];
+const NGOS_MAP = [
+  {id:'N1', name:'Akshaya Patra', x:0.55, y:0.72, emoji:'🏠', color:'#00D97E'},
+  {id:'N2', name:'Roti Bank', x:0.3, y:0.7, emoji:'🍚', color:'#00D97E'},
+];
+
+// Animation state
+let simAnim = {
+  active: false,
+  phase: 0,
+  donor: null,
+  driver: null,
+  ngo: null,
+  driverPos: {x:0, y:0},
+  targetPos: {x:0, y:0},
+  progress: 0,
+  trail: [],
+  dots: [],
+  phase3Progress: 0,
+  phase4Progress: 0,
+};
+
+function initCanvas() {
+  canvas = document.getElementById('sim-canvas');
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  renderMap();
+}
+
+function resizeCanvas() {
+  if(!canvas) return;
+  const panel = document.getElementById('map-panel');
+  mapW = canvas.width = panel.clientWidth;
+  mapH = canvas.height = panel.clientHeight - 80;
+}
+
+function renderMap() {
+  if(!canvas) return;
+  ctx = canvas.getContext('2d');
+  cancelAnimationFrame(animFrame);
+  animFrame = requestAnimationFrame(drawMap);
+}
+
+function drawMap() {
+  if(!canvas || !ctx) return;
+  ctx.clearRect(0,0,mapW,mapH);
+
+  // Background
+  ctx.fillStyle = '#0E1419';
+  ctx.fillRect(0,0,mapW,mapH);
+
+  // Grid
+  ctx.strokeStyle = 'rgba(0,217,126,0.06)';
+  ctx.lineWidth = 1;
+  const gs = 50;
+  for(let x=0; x<mapW; x+=gs) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,mapH); ctx.stroke(); }
+  for(let y=0; y<mapH; y+=gs) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(mapW,y); ctx.stroke(); }
+
+  // Roads (subtle)
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = 8;
+  const roads = [[0.0,0.5,1.0,0.5],[0.5,0.0,0.5,1.0],[0.25,0.0,0.25,1.0],[0.75,0.0,0.75,1.0]];
+  roads.forEach(([x1,y1,x2,y2]) => {
+    ctx.beginPath();ctx.moveTo(x1*mapW,y1*mapH);ctx.lineTo(x2*mapW,y2*mapH);ctx.stroke();
+  });
+
+  // Draw animated trail
+  if(simAnim.trail.length > 1) {
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(79,172,254,0.6)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6,4]);
+    ctx.moveTo(simAnim.trail[0].x*mapW, simAnim.trail[0].y*mapH);
+    simAnim.trail.forEach(p => ctx.lineTo(p.x*mapW, p.y*mapH));
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Phase-specific lines
+  if(simAnim.active) {
+    const d = simAnim.donor;
+    const dr = simAnim.driver;
+    const n = simAnim.ngo;
+
+    if(simAnim.phase >= 2 && d && dr) {
+      // Driver→Donor route
+      drawRoute(dr.x, dr.y, d.x, d.y, '#FFB800', simAnim.phase3Progress, 2);
+    }
+    if(simAnim.phase >= 3 && d && n) {
+      // Donor→NGO route
+      drawRoute(d.x, d.y, n.x, n.y, '#4FACFE', simAnim.phase4Progress, 2);
+    }
+  }
+
+  // Draw NGOs
+  NGOS_MAP.forEach(n => {
+    const x = n.x*mapW, y = n.y*mapH;
+    const isActive = simAnim.ngo && simAnim.ngo.id === n.id;
+    drawNode(x, y, '#00D97E', isActive ? 18 : 12, n.emoji, n.name);
+  });
+
+  // Draw Donors
+  DONORS.forEach(d => {
+    const x = d.x*mapW, y = d.y*mapH;
+    const isActive = simAnim.donor && simAnim.donor.id === d.id;
+    drawNode(x, y, '#FF6B35', isActive ? 18 : 12, d.emoji, d.name);
+  });
+
+  // Draw Drivers (animated position)
+  DRIVERS_MAP.forEach(dr => {
+    const isActive = simAnim.active && simAnim.driver && simAnim.driver.id === dr.id;
+    let x, y;
+    if(isActive) {
+      x = simAnim.driverPos.x * mapW;
+      y = simAnim.driverPos.y * mapH;
+    } else {
+      x = dr.x*mapW; y = dr.y*mapH;
+    }
+    drawNode(x, y, '#FFB800', isActive ? 16 : 10, dr.emoji, isActive ? dr.name+' (active)' : dr.name);
+  });
+
+  animFrame = requestAnimationFrame(drawMap);
+}
+
+function drawNode(x, y, color, r, emoji, label) {
+  // Glow
+  const grad = ctx.createRadialGradient(x,y,0,x,y,r*2);
+  grad.addColorStop(0, color+'40');
+  grad.addColorStop(1, color+'00');
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.arc(x,y,r*2,0,Math.PI*2); ctx.fill();
+
+  // Circle
+  ctx.fillStyle = color+'22';
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); ctx.stroke();
+
+  // Emoji
+  ctx.font = `${r}px serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(emoji, x, y);
+
+  // Label
+  ctx.font = '600 9px Manrope, sans-serif';
+  ctx.fillStyle = '#E8F0FE';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  const lbl = label.length > 18 ? label.substring(0,16)+'...' : label;
+  ctx.fillStyle = 'rgba(7,11,15,0.7)';
+  const tw = ctx.measureText(lbl).width;
+  ctx.fillRect(x-tw/2-3, y+r+3, tw+6, 13);
+  ctx.fillStyle = '#E8F0FE';
+  ctx.fillText(lbl, x, y+r+4);
+}
+
+function drawRoute(x1, y1, x2, y2, color, progress, lw=2) {
+  const mx = mapW, my = mapH;
+  const cx = (x1+x2)/2, cy = Math.min(y1,y2) - 0.15;
+  ctx.beginPath();
+  ctx.moveTo(x1*mx, y1*my);
+  ctx.quadraticCurveTo(cx*mx, cy*my, x2*mx, y2*my);
+  ctx.strokeStyle = color + '40';
+  ctx.lineWidth = lw;
+  ctx.setLineDash([]);
+  ctx.stroke();
+
+  if(progress > 0) {
+    // Animated portion
+    const steps = 60;
+    const end = Math.floor(steps * progress);
+    ctx.beginPath();
+    for(let i=0; i<=end; i++) {
+      const t = i/steps;
+      const px = (1-t)*(1-t)*x1*mx + 2*(1-t)*t*cx*mx + t*t*x2*mx;
+      const py = (1-t)*(1-t)*y1*my + 2*(1-t)*t*cy*my + t*t*y2*my;
+      if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lw+1;
+    ctx.stroke();
+
+    // Moving dot at end
+    if(end > 0) {
+      const t = end/steps;
+      const px = (1-t)*(1-t)*x1*mx + 2*(1-t)*t*cx*mx + t*t*x2*mx;
+      const py = (1-t)*(1-t)*y1*my + 2*(1-t)*t*cy*my + t*t*y2*my;
+      ctx.fillStyle = color;
+      ctx.beginPath(); ctx.arc(px,py,5,0,Math.PI*2); ctx.fill();
+      // Pulse
+      ctx.strokeStyle = color+'60';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(px,py,8+Math.sin(Date.now()/200)*3,0,Math.PI*2); ctx.stroke();
+    }
+  }
+}
+
+// ═══════════════════════════════════════
+//  PHASE MANAGEMENT
+// ═══════════════════════════════════════
+function showPhase(id) {
+  ['form','scoring','matching','delivery','impact'].forEach(p => {
+    document.getElementById('phase-'+p).style.display = 'none';
+  });
+  document.getElementById('phase-'+id).style.display = 'block';
+}
+
+function setTimeline(active) {
+  // active = 0..4
+  for(let i=0;i<=4;i++) {
+    const dot = document.getElementById('tl'+i);
+    const lbl = document.getElementById('tll'+i);
+    const con = document.getElementById('tc'+i);
+    dot.className = 'tl-dot' + (i < active ? ' done' : i===active ? ' active' : '');
+    lbl.className = 'tl-lbl' + (i < active ? ' done' : i===active ? ' active' : '');
+    if(con) con.className = 'tl-connector' + (i < active ? ' done' : '');
+  }
+}
+
+function setBanner(icon, title, sub) {
+  document.getElementById('pbicon').textContent = icon;
+  document.getElementById('pbtitle').textContent = title;
+  document.getElementById('pbsub').textContent = sub;
+}
+
+// ═══════════════════════════════════════
+//  SIMULATION FLOW
+// ═══════════════════════════════════════
+function startSim() {
+  const biz = document.getElementById('f-biz').value || 'Hotel Spice Garden';
+  const type = document.getElementById('f-type').value;
+  const qty = parseFloat(document.getElementById('f-qty').value) || 18;
+  const loc = document.getElementById('f-loc').value || 'MG Road, Pune';
+
+  S.donor = { name: biz, type, qty, loc };
+  S.qty = qty;
+
+  // Pick random donor on map
+  simAnim.donor = DONORS[0];
+  simAnim.driver = null;
+  simAnim.ngo = null;
+  simAnim.active = true;
+  simAnim.trail = [];
+  simAnim.phase3Progress = 0;
+  simAnim.phase4Progress = 0;
+  simAnim.driverPos = {...DRIVERS_MAP[0]};
+
+  showPhase('scoring');
+  setTimeline(1);
+  setBanner('🧠', 'AI Urgency Engine Active', 'Scoring: shelf life · distance · demand · quantity');
+  toast('🍽️ Donation posted by ' + biz + ' — AI scoring started');
+  goPhase('scoring');
+}
+
+function goPhase(phase) {
+  showPhase(phase);
+  if(phase==='scoring') runScoring();
+  if(phase==='matching') runMatching();
+  if(phase==='delivery') runDelivery();
+  if(phase==='impact') runImpact();
+}
+
+// ─── PHASE 1: SCORING ───
+function runScoring() {
+  setTimeline(1);
+  const log = document.getElementById('score-log');
+  log.innerHTML = '';
+  const steps = [
+    {t:200, text:'<span class="t">[AI]</span> Received food posting from '+S.donor.name, cls:'t'},
+    {t:600, text:'<span class="t">[AI]</span> Loading NGO demand index...', cls:'t'},
+    {t:1000, text:'<span class="w">[ROUTE]</span> Computing nearest 3 NGOs...', cls:'w'},
+    {t:1400, text:'<span class="t">[AI]</span> Shelf life urgency: '+S.urgency.toUpperCase(), cls:'t'},
+    {t:1800, text:'<span class="t">[AI]</span> Quantity: '+S.qty+' kg → high priority', cls:'t'},
+    {t:2200, text:'<span class="t">[AI]</span> Distance to Akshaya Patra: 2.3 km', cls:'t'},
+    {t:2600, text:'<span class="w">[SCORE]</span> Computing final priority score...', cls:'w'},
+  ];
+  steps.forEach(s => {
+    setTimeout(() => {
+      log.innerHTML += `<div class="log-line">${s.text}</div>`;
+      log.scrollTop = log.scrollHeight;
+    }, s.t);
+  });
+
+  const scores = {
+    shelf: S.urgency==='urgent' ? 95 : S.urgency==='moderate' ? 70 : 40,
+    dist: 78,
+    demand: 88,
+    qty: Math.min(100, Math.round(S.qty * 3))
+  };
+  const final = Math.round((scores.shelf * 0.4 + scores.dist * 0.25 + scores.demand * 0.25 + scores.qty * 0.1));
+
+  setTimeout(() => animScoreBars(scores, final), 1400);
+
+  setTimeout(() => {
+    const badge = document.getElementById('score-badge');
+    badge.textContent = final >= 80 ? '🔴 CRITICAL PRIORITY' : final >= 60 ? '🟡 HIGH PRIORITY' : '🟢 STANDARD PRIORITY';
+    badge.style.background = final >= 80 ? 'rgba(255,71,87,0.15)' : final >= 60 ? 'rgba(255,184,0,0.15)' : 'rgba(0,217,126,0.15)';
+    badge.style.color = final >= 80 ? 'var(--red)' : final >= 60 ? 'var(--amber)' : 'var(--g)';
+    badge.style.borderColor = final >= 80 ? 'rgba(255,71,87,0.3)' : final >= 60 ? 'rgba(255,184,0,0.3)' : 'rgba(0,217,126,0.3)';
+    document.getElementById('scoring-next').classList.remove('hidden');
+    toast('🧠 Priority score: ' + final + '/100 — routing to driver queue');
+  }, 3200);
+}
+
+function animScoreBars(scores, final) {
+  const bars = [
+    {id:'shelf', val:scores.shelf}, {id:'dist', val:scores.dist},
+    {id:'demand', val:scores.demand}, {id:'qty', val:scores.qty}
+  ];
+  bars.forEach((b, i) => {
+    setTimeout(() => {
+      document.getElementById('sb-'+b.id).style.width = b.val+'%';
+      document.getElementById('sv-'+b.id).textContent = b.val;
+    }, i * 300);
+  });
+  setTimeout(() => {
+    let n = 0;
+    const interval = setInterval(() => {
+      n = Math.min(n + 2, final);
+      document.getElementById('final-score').textContent = n;
+      if(n >= final) clearInterval(interval);
+    }, 30);
+  }, 1200);
+}
+
+// ─── PHASE 2: MATCHING ───
+function runMatching() {
+  setTimeline(2);
+  setBanner('🚴', 'Finding Idle Drivers', 'Matching by proximity, route overlap, and availability');
+  document.getElementById('match-loc').textContent = S.donor.loc;
+
+  const log = document.getElementById('match-log');
+  log.innerHTML = '';
+  const dl = document.getElementById('drivers-list-match');
+  dl.innerHTML = '';
+  document.getElementById('matching-next').classList.add('hidden');
+
+  const drivers = [
+    {id:'R1', name:'Rahul Kumar', meta:'0.8 km away · Return trip via MG Rd · ⭐ 4.9', eta:'8 min', pts:'+180 pts', overlap:'92% route overlap', best:true},
+    {id:'R2', name:'Priya Patil', meta:'2.1 km away · Idle since 12:30 · ⭐ 4.8', eta:'14 min', pts:'+165 pts', overlap:'78% route overlap', best:false},
+    {id:'R3', name:'Amit Sharma', meta:'3.4 km away · Off-peak route · ⭐ 4.7', eta:'19 min', pts:'+150 pts', overlap:'61% route overlap', best:false},
+  ];
+
+  const logSteps = [
+    {t:200, text:'<span class="t">[MATCH]</span> Scanning 12 active drivers within 5 km...'},
+    {t:700, text:'<span class="t">[MATCH]</span> Filtering: idle / return trips / off-peak...'},
+    {t:1200, text:'<span class="w">[ROUTE]</span> Computing route overlap scores...'},
+    {t:1700, text:'<span class="t">[MATCH]</span> 3 drivers qualify. Sorting by score...'},
+  ];
+  logSteps.forEach(s => setTimeout(() => {
+    log.innerHTML += `<div class="log-line">${s.text}</div>`;
+    log.scrollTop = log.scrollHeight;
+  }, s.t));
+
+  drivers.forEach((d, i) => {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'driver-match' + (i===0 ? ' selected' : '');
+      el.id = 'dm-'+d.id;
+      el.innerHTML = `
+        <div class="dm-avatar">${['🛵','🚲','🏍️'][i]}</div>
+        <div style="flex:1">
+          <div class="dm-name">${d.name} ${d.best ? '<span style="color:var(--g);font-size:0.7rem;">★ BEST MATCH</span>':''}</div>
+          <div class="dm-meta">${d.meta}</div>
+          <div class="dm-meta" style="color:var(--g);margin-top:2px;">🛣️ ${d.overlap}</div>
+        </div>
+        <div>
+          <div class="dm-badge${d.best?' best':''}">ETA ${d.eta}</div>
+          <div style="font-size:0.65rem;color:var(--amber);text-align:right;margin-top:3px;">${d.pts}</div>
+        </div>
+      `;
+      el.onclick = () => {
+        document.querySelectorAll('.driver-match').forEach(x=>x.classList.remove('selected'));
+        el.classList.add('selected');
+        S.selectedDriver = d;
+      };
+      dl.appendChild(el);
+    }, 2000 + i*400);
+  });
+
+  S.selectedDriver = drivers[0];
+
+  setTimeout(() => {
+    document.getElementById('matched-driver-name').textContent = 'Rahul Kumar';
+    document.getElementById('eta-pickup').textContent = '8 minutes';
+    document.getElementById('matching-next').classList.remove('hidden');
+    simAnim.driver = DRIVERS_MAP[0];
+    simAnim.phase = 2;
+    toast('✅ Rahul Kumar accepted the rescue task! En route to ' + S.donor.name);
+  }, 3800);
+}
+
+// ─── PHASE 3: DELIVERY ───
+let delInterval = null;
+function runDelivery() {
+  setTimeline(3);
+  setBanner('📦', 'Food In Transit', 'Rahul Kumar → Hotel Spice Garden → Akshaya Patra');
+
+  const dr = S.selectedDriver || {name:'Rahul Kumar', pts:'+180 pts'};
+  document.getElementById('del-driver-name').textContent = dr.name;
+  document.getElementById('del-driver-meta').textContent = 'En route to pickup · 8 min ETA';
+  document.getElementById('del-pts').textContent = dr.pts || '+180 pts';
+
+  S.ngo = NGOS_MAP[0];
+  simAnim.ngo = NGOS_MAP[0];
+  simAnim.phase = 2;
+
+  const steps = [
+    {icon:'🛵', title:'Driver En Route to Pickup', sub:'Rahul K. heading to Hotel Spice Garden', done:false, time:''},
+    {icon:'📦', title:'Food Picked Up', sub:'18 kg '+S.donor.type+' loaded & verified', done:false, time:''},
+    {icon:'🚗', title:'Heading to Akshaya Patra', sub:'Optimal route via MG Road · 2.3 km', done:false, time:''},
+    {icon:'✅', title:'Delivered to NGO', sub:'Akshaya Patra confirmed receipt', done:false, time:''},
+  ];
+
+  const stepsEl = document.getElementById('del-steps');
+  stepsEl.innerHTML = '';
+  steps.forEach((s,i) => {
+    stepsEl.innerHTML += `
+      <div class="del-step" id="dstep-${i}">
+        <div class="del-icon ${i===0?'active':''}" id="dicon-${i}">${s.icon}</div>
+        <div class="del-text">
+          <div class="del-title">${s.title}</div>
+          <div class="del-time" id="dtime-${i}">${i===0?'In progress...':'Pending'}</div>
+        </div>
+      </div>`;
+  });
+
+  const durations = [6000, 4000, 7000, 3000];
+  let total = durations.reduce((a,b)=>a+b,0);
+  let elapsed = 0;
+  let curStep = 0;
+
+  // Animate driver movement
+  simAnim.driverPos = {...DRIVERS_MAP[0]};
+  simAnim.phase3Progress = 0;
+  simAnim.phase4Progress = 0;
+
+  function advanceStep(stepIdx) {
+    if(stepIdx > 0) {
+      document.getElementById('dicon-'+(stepIdx-1)).className = 'del-icon done';
+      document.getElementById('dicon-'+(stepIdx-1)).textContent = '✓';
+      const now = new Date();
+      document.getElementById('dtime-'+(stepIdx-1)).textContent = 'Done · ' + now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    }
+    if(stepIdx < steps.length) {
+      document.getElementById('dicon-'+stepIdx).className = 'del-icon active';
+      document.getElementById('dtime-'+stepIdx).textContent = 'In progress...';
+    }
+
+    // Update map animation
+    if(stepIdx === 0) { simAnim.phase = 2; }
+    if(stepIdx === 1) {
+      // Driver reached donor
+      simAnim.driverPos = {...DONORS[0]};
+      simAnim.phase3Progress = 1;
+      toast('📦 Pickup complete! ' + S.qty + ' kg loaded by ' + dr.name);
+    }
+    if(stepIdx === 2) { simAnim.phase = 3; }
+    if(stepIdx === 3) {
+      // Arrived at NGO
+      simAnim.driverPos = {...NGOS_MAP[0]};
+      simAnim.phase4Progress = 1;
+      toast('🎉 Food delivered to Akshaya Patra! Impact being calculated...');
+    }
+  }
+
+  advanceStep(0);
+
+  // Update ETA
+  const etaEl = document.getElementById('del-eta');
+  let etaMin = 20;
+
+  const ticker = setInterval(() => {
+    elapsed += 100;
+    const pct = Math.min(elapsed / total, 1);
+    document.getElementById('del-progress').style.width = (pct*100) + '%';
+    etaMin = Math.max(0, Math.round((1-pct)*20));
+    etaEl.textContent = etaMin > 0 ? `ETA: ~${etaMin} min` : 'Arrived!';
+
+    // Animate driver pos on map
+    if(curStep === 0 && pct < durations[0]/total) {
+      const p = pct / (durations[0]/total);
+      simAnim.driverPos.x = DRIVERS_MAP[0].x + (DONORS[0].x - DRIVERS_MAP[0].x) * p;
+      simAnim.driverPos.y = DRIVERS_MAP[0].y + (DONORS[0].y - DRIVERS_MAP[0].y) * p;
+      simAnim.phase3Progress = p;
+    } else if(curStep === 2) {
+      const p2start = (durations[0]+durations[1])/total;
+      const p2end = (durations[0]+durations[1]+durations[2])/total;
+      const p = Math.max(0, Math.min(1, (pct - p2start) / (p2end - p2start)));
+      simAnim.driverPos.x = DONORS[0].x + (NGOS_MAP[0].x - DONORS[0].x) * p;
+      simAnim.driverPos.y = DONORS[0].y + (NGOS_MAP[0].y - DONORS[0].y) * p;
+      simAnim.phase4Progress = p;
+    }
+  }, 100);
+
+  // Advance steps
+  let stepTimer = 0;
+  durations.forEach((dur, i) => {
+    stepTimer += dur;
+    setTimeout(() => {
+      curStep = i + 1;
+      advanceStep(i + 1);
+      if(i === durations.length - 1) {
+        clearInterval(ticker);
+        setTimeline(4);
+        setBanner('🎉', 'Rescue Complete!', 'Food delivered · Impact verified · Donor notified');
+        setTimeout(() => goPhase('impact'), 1500);
+      }
+    }, stepTimer);
+  });
+}
+
+// ─── PHASE 4: IMPACT ───
+function runImpact() {
+  setTimeline(4);
+  const meals = Math.round(S.qty * 3.8);
+  const co2 = (S.qty * 2.5).toFixed(1);
+  const pts = S.selectedDriver ? parseInt(S.selectedDriver.pts) || 180 : 180;
+
+  S.meals = meals;
+  S.totalMeals += meals;
+  S.totalFood += S.qty;
+  S.totalCO2 += parseFloat(co2);
+
+  // Animate number
+  animNum(document.getElementById('imp-meals'), meals, 1500);
+  setTimeout(() => {
+    document.getElementById('imp-kg').textContent = S.qty + ' kg';
+    document.getElementById('imp-co2').textContent = co2 + ' kg';
+    document.getElementById('imp-pts').textContent = pts;
+
+    document.getElementById('cert-donor').textContent = S.donor.name;
+    document.getElementById('cert-text').textContent = `On ${new Date().toLocaleDateString('en-IN')}, ${S.donor.name} donated ${S.qty} kg of ${S.donor.type}. This was rescued by ${S.selectedDriver?.name || 'Rahul Kumar'} and delivered to Akshaya Patra, feeding ${meals} people. CO₂ prevented: ${co2} kg.`;
+
+    const foodEmojis = {Biryani:'🍛',Bread:'🍞',Sabzi:'🥘','Rice-Dal':'🍚',Salads:'🥗'};
+    document.getElementById('sp-emoji').textContent = foodEmojis[S.donor.type] || '🍽️';
+    document.getElementById('sp-ngo').textContent = 'Akshaya Patra Pune';
+    document.getElementById('sp-text').textContent = `${meals} people were fed today thanks to ${S.donor.name}'s ${S.qty} kg donation of ${S.donor.type}. Every rescue makes a difference. 🙏`;
+    document.getElementById('sp-time').textContent = 'Just now';
+    document.getElementById('sp-meals').textContent = '🍽️ ' + meals + ' meals';
+
+    toast('🎉 ' + meals + ' meals served! Updating network impact counters...');
+    updateDashCounters();
+  }, 500);
+}
+
+function animNum(el, target, dur) {
+  let start = null;
+  const step = (ts) => {
+    if(!start) start = ts;
+    const p = Math.min((ts-start)/dur, 1);
+    const e = 1 - Math.pow(1-p, 3);
+    el.textContent = Math.floor(e * target);
+    if(p < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+function updateDashCounters() {
+  document.getElementById('d-meals').textContent = S.totalMeals.toLocaleString();
+  document.getElementById('d-food').textContent = Math.round(S.totalFood);
+  document.getElementById('d-co2').textContent = Math.round(S.totalCO2);
+}
+
+function resetSim() {
+  simAnim.active = false;
+  simAnim.phase3Progress = 0;
+  simAnim.phase4Progress = 0;
+  S.selectedDriver = null;
+  S.donor = null;
+  showPhase('form');
+  setTimeline(0);
+  setBanner('🏁', 'Ready to Simulate', 'Post a food donation to begin the rescue chain');
+  toast('🔄 Simulation reset. Ready for next rescue.');
+}
+
+// ═══════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════
+const FEED_DATA = [
+  {ico:'🍛',name:'JW Marriott',detail:'32 kg biryani · 1.5 hrs left',cls:'fi-u',badge:'Urgent'},
+  {ico:'🍞',name:'Sunrise Bakery',detail:'15 kg bread · 5 hrs left',cls:'fi-l',badge:'Stable'},
+  {ico:'🥘',name:'Punjab Dhaba',detail:'20 kg curry · 2 hrs left',cls:'fi-u',badge:'Urgent'},
+  {ico:'🍚',name:'Infosys Cafeteria',detail:'45 kg rice-dal · 3 hrs left',cls:'fi-m',badge:'Moderate'},
+  {ico:'☕',name:'Café Metro',detail:'8 kg pastries · 4 hrs left',cls:'fi-m',badge:'Moderate'},
+];
+
+const CHART_DATA = [
+  {d:'Mon',v:540},{d:'Tue',v:680},{d:'Wed',v:490},
+  {d:'Thu',v:780},{d:'Fri',v:920},{d:'Sat',v:565},{d:'Sun',v:847}
+];
+
+const LB_DATA = [
+  {rank:'r1',n:'JW Marriott',v:'4,960 meals'},
+  {rank:'r2',n:'Infosys Cafeteria',v:'3,920 meals'},
+  {rank:'r3',n:'Hotel Spice Garden',v:'3,000 meals'},
+  {rank:'',n:'Sunrise Bakery',v:'2,480 meals'},
+  {rank:'',n:'Café Metro',v:'1,640 meals'},
+];
+
+let dashInited = false;
+function initDash() {
+  if(dashInited) { updateDashCounters(); return; }
+  dashInited = true;
+
+  // Feed
+  const feed = document.getElementById('dash-feed');
+  FEED_DATA.forEach(f => {
+    feed.innerHTML += `<div class="feed-item">
+      <div class="fi-ico">${f.ico}</div>
+      <div><div class="fi-name">${f.name}</div><div class="fi-detail">${f.detail}</div></div>
+      <div class="fi-badge ${f.cls}">${f.badge}</div>
+    </div>`;
+  });
+
+  // Chart
+  const barsEl = document.getElementById('dash-bars');
+  const maxV = Math.max(...CHART_DATA.map(d=>d.v));
+  CHART_DATA.forEach((d,i) => {
+    const pct = Math.round((d.v/maxV)*90);
+    const colors = ['#00D97E','#00D97E','#00D97E','#FFB800','#FFB800','#00D97E','#FF6B35'];
+    barsEl.innerHTML += `<div class="bar-col">
+      <div class="bar" style="height:${pct}%;background:${colors[i]};opacity:${i===6?1:0.65}"></div>
+      <div class="bar-lbl">${d.d}</div>
+    </div>`;
+  });
+
+  // Leaderboard
+  const lb = document.getElementById('dash-lb');
+  LB_DATA.forEach((l,i) => {
+    lb.innerHTML += `<div class="lb-item">
+      <div class="lb-rank ${l.rank}">${i+1}</div>
+      <div class="lb-name">${l.n}</div>
+      <div class="lb-val">${l.v}</div>
+    </div>`;
+  });
+
+  // Mini map
+  const mc = document.getElementById('dash-canvas');
+  const mp = mc.parentElement;
+  mc.width = mp.clientWidth;
+  mc.height = 200;
+  const mctx = mc.getContext('2d');
+  drawMiniMap(mctx, mc.width, 200);
+
+  // Live feed simulation
+  let fi = 0;
+  setInterval(() => {
+    const item = FEED_DATA[fi % FEED_DATA.length];
+    fi++;
+    const el = document.createElement('div');
+    el.className = 'feed-item';
+    el.innerHTML = `<div class="fi-ico">${item.ico}</div>
+      <div><div class="fi-name">${item.name}</div><div class="fi-detail">${item.detail}</div></div>
+      <div class="fi-badge ${item.cls}">${item.badge}</div>`;
+    feed.prepend(el);
+    if(feed.children.length > 6) feed.lastChild.remove();
+    // update KPI
+    const km = document.getElementById('d-meals');
+    km.textContent = (parseInt(km.textContent.replace(',','')) + Math.floor(Math.random()*8+3)).toLocaleString();
+  }, 5000);
+}
+
+function drawMiniMap(mctx, w, h) {
+  mctx.fillStyle = '#141C24';
+  mctx.fillRect(0,0,w,h);
+  // Grid
+  mctx.strokeStyle = 'rgba(0,217,126,0.07)';
+  mctx.lineWidth = 1;
+  for(let x=0;x<w;x+=30){mctx.beginPath();mctx.moveTo(x,0);mctx.lineTo(x,h);mctx.stroke();}
+  for(let y=0;y<h;y+=30){mctx.beginPath();mctx.moveTo(0,y);mctx.lineTo(w,y);mctx.stroke();}
+  // Routes
+  const routes = [
+    {x1:0.15,y1:0.4,x2:0.5,y2:0.65,c:'#FF6B35'},
+    {x1:0.6,y1:0.25,x2:0.5,y2:0.65,c:'#FFB800'},
+    {x1:0.8,y1:0.6,x2:0.5,y2:0.65,c:'#4FACFE'},
+  ];
+  routes.forEach(r => {
+    mctx.beginPath();
+    mctx.moveTo(r.x1*w,r.y1*h);
+    mctx.lineTo(r.x2*w,r.y2*h);
+    mctx.strokeStyle = r.c+'80';
+    mctx.lineWidth = 2;
+    mctx.setLineDash([5,4]);
+    mctx.stroke();
+    mctx.setLineDash([]);
+  });
+  // Nodes
+  [[0.15,0.4,'#FF6B35','🍛'],[0.6,0.25,'#FF6B35','🍞'],[0.8,0.6,'#FF6B35','☕'],
+   [0.35,0.52,'#FFB800','🛵'],[0.5,0.28,'#FFB800','🚲'],
+   [0.5,0.65,'#00D97E','🏠'],[0.25,0.72,'#00D97E','🍚']].forEach(([x,y,c,e]) => {
+    mctx.fillStyle = c+'30';
+    mctx.strokeStyle = c;
+    mctx.lineWidth = 1.5;
+    mctx.beginPath();mctx.arc(x*w,y*h,8,0,Math.PI*2);mctx.fill();mctx.stroke();
+    mctx.font = '9px serif';
+    mctx.textAlign='center';mctx.textBaseline='middle';
+    mctx.fillText(e,x*w,y*h);
+  });
+}
+
+// ═══════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════
+function toast(msg, warn=false) {
+  const w = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = 'toast' + (warn?' warn':'');
+  t.textContent = msg;
+  w.appendChild(t);
+  setTimeout(() => {
+    t.style.opacity='0';t.style.transform='translateX(16px)';t.style.transition='all .3s';
+    setTimeout(()=>t.remove(),300);
+  }, 4500);
+}
+
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+window.addEventListener('load', () => {
   nav('about');
+  // Startup toasts
+  setTimeout(() => toast('🟢 FoodFlow network is live — 3 active rescues in progress'), 800);
+  setTimeout(() => toast('🎉 847 meals rescued today — network record on track!'), 2500);
+});
+
+window.addEventListener('resize', () => {
+  if(canvas) resizeCanvas();
 });
 </script>
 
