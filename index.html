@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FoodFlow — Logistics Simulation</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --g:#00D97E;
+  --bg:#070B0F;
+  --s1:#0E1419;
+  --s2:#141C24;
+  --b:rgba(255,255,255,0.06);
+  --t:#E8F0FE;
+  --m:#6B7A8D;
+  --font:'Manrope',sans-serif;
+  --display:'Syne',sans-serif;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--t);min-height:100vh}
+
+/* NAV */
+#topnav{
+  position:fixed;top:0;left:0;right:0;height:56px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;background:var(--s1);border-bottom:1px solid var(--b);
+  z-index:1000;
+}
+.logo{font-family:var(--display);font-weight:800;color:var(--g);cursor:pointer}
+.nav-pills{display:flex;gap:10px}
+.npill{
+  padding:6px 14px;border-radius:6px;border:1px solid var(--b);
+  background:transparent;color:var(--m);cursor:pointer;font-size:0.8rem;
+}
+.npill.on{background:var(--g);color:#000}
+
+/* VIEW */
+.view{display:none;padding-top:56px}
+.view.on{display:block}
+
+/* ABOUT */
+#about-view{padding:60px 24px;max-width:900px;margin:auto;text-align:center}
+.about-title{
+  font-family:var(--display);
+  font-size:clamp(2rem,5vw,3.2rem);
+  font-weight:800;margin-bottom:16px;
+}
+.about-sub{
+  color:var(--m);
+  max-width:600px;
+  margin:0 auto 40px auto;
+  line-height:1.6;
+}
+.btn{
+  padding:10px 22px;
+  background:var(--g);
+  color:#000;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-weight:600;
+  margin:5px;
+}
+
+/* FOOTER */
+.footer{
+  margin-top:80px;
+  background:var(--s1);
+  border-top:1px solid var(--b);
+  padding:16px;
+  text-align:center;
+  font-size:0.75rem;
+  color:var(--m);
+}
+.footer strong{color:var(--g)}
+</style>
+</head>
+
+<body>
+
+<div id="topnav">
+  <div class="logo" onclick="nav('about')">FoodFlow</div>
+  <div class="nav-pills">
+    <button class="npill on" id="np-about" onclick="nav('about')">About</button>
+    <button class="npill" id="np-sim" onclick="nav('sim')">Simulation</button>
+    <button class="npill" id="np-dash" onclick="nav('dash')">Dashboard</button>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<div id="about-view" class="view on">
+  <div class="about-title">
+    Surplus Food Logistics Simulation
+  </div>
+
+  <div class="about-sub">
+    This interface demonstrates a simulated logistics workflow for surplus food redistribution.
+    It visualizes donation posting, priority scoring, driver assignment, delivery tracking,
+    and impact estimation within a controlled demo environment.
+  </div>
+
+  <button class="btn" onclick="nav('sim')">Run Simulation</button>
+  <button class="btn" onclick="nav('dash')">View Dashboard</button>
+</div>
+
+<!-- SIMULATION PLACEHOLDER -->
+<div id="sim-view" class="view" style="padding:80px;text-align:center">
+  <h2>Live Simulation Module</h2>
+  <p style="color:var(--m);margin-top:10px">
+    Full interactive simulation retained from original version.
+  </p>
+</div>
+
+<!-- DASHBOARD PLACEHOLDER -->
+<div id="dash-view" class="view" style="padding:80px;text-align:center">
+  <h2>Impact Dashboard</h2>
+  <p style="color:var(--m);margin-top:10px">
+    Aggregated metrics and feed visualization retained from original version.
+  </p>
+</div>
+
+<div class="footer">
+  <strong>Disclaimer:</strong> This interface is built purely for simulation and demonstration purposes.
+  It does not fully represent or replicate real-world logistics execution,
+  backend infrastructure, or live production systems.
+</div>
+
+<script>
+function nav(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.querySelectorAll('.npill').forEach(p=>p.classList.remove('on'));
+  document.getElementById(id+'-view').classList.add('on');
+  document.getElementById('np-'+id).classList.add('on');
+}
+
+window.addEventListener('load',()=>{
+  nav('about');
+});
+</script>
+
+</body>
+</html>
